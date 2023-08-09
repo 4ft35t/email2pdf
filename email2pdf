@@ -27,8 +27,8 @@ import tempfile
 import textwrap
 import traceback
 
-from PyPDF2 import PdfFileReader, PdfFileWriter
-from PyPDF2.generic import NameObject, createStringObject
+from PyPDF2 import PdfReader, PdfWriter
+from PyPDF2.generic import NameObject, create_string_object
 from bs4 import BeautifulSoup
 import magic
 
@@ -545,21 +545,21 @@ def add_update_pdf_metadata(filename, update_dictionary):
     full_update_dictionary = {add_prefix(k): v for k, v in update_dictionary.items()}
 
     with open(filename, 'rb') as input_file:
-        pdf_input = PdfFileReader(input_file)
-        pdf_output = PdfFileWriter()
+        pdf_input = PdfReader(input_file)
+        pdf_output = PdfWriter()
 
-        for page in range(pdf_input.getNumPages()):
-            pdf_output.addPage(pdf_input.getPage(page))
+        for page in pdf_input.pages:
+            pdf_output.add_page(page)
 
-        info_dict = pdf_output._info.getObject()
+        info_dict = pdf_output._info.get_object()
 
-        info = pdf_input.documentInfo
+        info = pdf_input.metadata
 
         full_update_dictionary = dict(chain(info.items(), full_update_dictionary.items()))
 
         for key in full_update_dictionary:
             assert full_update_dictionary[key] is not None
-            info_dict.update({NameObject(key): createStringObject(full_update_dictionary[key])})
+            info_dict.update({NameObject(key): create_string_object(full_update_dictionary[key])})
 
         os_file_out, temp_file_name = tempfile.mkstemp(prefix="email2pdf_add_update_pdf_metadata", suffix=".pdf")
         # Immediately close the file as created to work around issue on
